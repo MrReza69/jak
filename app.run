@@ -1,0 +1,31 @@
+from flask import Flask, render_template, request
+from spotipy import Spotify
+from spotipy.oauth2 import SpotifyClientCredentials
+import os
+
+app = Flask(__name__)
+
+# Spotify API Configuration
+sp = Spotify(auth_manager=SpotifyClientCredentials(
+    client_id=os.getenv('SPOTIFY_CLIENT_ID'),
+    client_secret=os.getenv('SPOTIFY_CLIENT_SECRET')
+))
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/search', methods=['POST'])
+def search():
+    query = request.form.get('search')
+    results = sp.search(q=query, type='track', limit=12)
+    tracks = results['tracks']['items']
+    return render_template('results.html', tracks=tracks)
+
+@app.route('/track/<track_id>')
+def track_details(track_id):
+    track = sp.track(track_id)
+    return render_template('track.html', track=track)
+
+if __name__ == '__main__':
+    app.run(debug=True)
